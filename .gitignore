@@ -45,3 +45,5 @@ extras/.dirstamp
 datapath.lua
 core
 
+naev-data
+naev-data/conf.lua naev-data/conf.lua.backup naev-data/nebula

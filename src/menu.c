@@ -173,8 +173,8 @@ void menu_main (void)
    y  = 20 + (BUTTON_HEIGHT+20)*5;
    h  = y + 80;
    if (conf.devmode) {
-      h += BUTTON_HEIGHT + 20;
-      y += BUTTON_HEIGHT + 20;
+      h += 2 * (BUTTON_HEIGHT + 20);
+      y += 2 * (BUTTON_HEIGHT + 20);
    }
 
    /* Calculate Logo and window offset. */
@@ -220,6 +220,11 @@ void menu_main (void)
    if (conf.devmode) {
       window_addButton( wid, 20, y, BUTTON_WIDTH, BUTTON_HEIGHT,
             "btnEditor", "Editor", uniedit_open );
+      y -= BUTTON_HEIGHT+20;
+      
+      //galaxy gen database stuff
+      window_addButton( wid, 20, y, BUTTON_WIDTH, BUTTON_HEIGHT, 
+            "btnDatabase", "Galaxy DB", NULL);
       y -= BUTTON_HEIGHT+20;
    }
    window_addButton( wid, 20, y, BUTTON_WIDTH, BUTTON_HEIGHT,
