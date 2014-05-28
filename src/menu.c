@@ -45,7 +45,7 @@
 #include "camera.h"
 #include "board.h"
 #include "ndata.h"
-
+#include "gen-db.h"
 
 #define MAIN_WIDTH      130 /**< Main menu width. */
 
@@ -224,7 +224,7 @@ void menu_main (void)
       
       //galaxy gen database stuff
       window_addButton( wid, 20, y, BUTTON_WIDTH, BUTTON_HEIGHT, 
-            "btnDatabase", "Galaxy DB", NULL);
+            "btnDatabase", "Galaxy DB", gendb_loadDatabaseScreen);
       y -= BUTTON_HEIGHT+20;
    }
    window_addButton( wid, 20, y, BUTTON_WIDTH, BUTTON_HEIGHT,

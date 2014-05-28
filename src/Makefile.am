@@ -144,6 +144,7 @@ CODE_SOURCE = \
 	toolkit.c \
 	unidiff.c \
 	weapon.c \
+	gen-db.c \
 	ai.h \
 	ai_extra.h \
 	array.h \
@@ -287,7 +288,8 @@ CODE_SOURCE = \
 	threadpool.h \
 	toolkit.h \
 	unidiff.h \
-	weapon.h
+	weapon.h \
+	gen-db.h`
 
 if HAVE_WINDRES
 WINDOWS_RESOURCE = ../extras/resource.rc
