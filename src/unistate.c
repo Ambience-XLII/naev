@@ -5,6 +5,17 @@
  */
 
 
+/* 
+ * TODO: Bring up to par with the current unistate system. 
+ *  - Set asset to be hidden or visible
+ *  - Add items to tech lists
+ *  - Add and remove jumps 
+ *  - Change range of presence
+ * Optional stuff:
+ *  - Change position of planet
+ *  - Set a planet to be landable or not
+ */
+
 //uncomment this line for debug output to lua console
 //#define UNISTATE_DEBUG
 
@@ -22,7 +33,7 @@
 assetStatePtr unistate_populateList(xmlNodePtr root);
 int unistate_writeFile(assetStatePtr list, xmlTextWriterPtr writer);
 assetStatePtr unistate_getNode(char *planet);
-int unistate_addNode(char *planet, char *faction, int presence);
+int unistate_addNode(char *planet, char *faction, int presence, int range);
 void unistate_freeList(assetStatePtr list);
 
 //global pointer to unistate list
@@ -90,6 +101,7 @@ assetStatePtr unistate_populateList(xmlNodePtr root)
             xml_onlyNodes(elementNode);
             xmlr_strd(elementNode, "faction", curElement->faction);
             xmlr_int(elementNode, "presence", curElement->presence);
+            xmlr_int(elementNode, "presence_range", curElement->range);
          } while(xml_nextNode(elementNode));
          //more debug stuff
    #ifdef UNISTATE_DEBUG
@@ -153,8 +165,8 @@ int unistate_writeFile(assetStatePtr list, xmlTextWriterPtr writer)
       //for debug purposes
 #ifdef UNISTATE_DEBUG
       snprintf(debugBuffer, sizeof(char) * (PATH_MAX - 1),\
-         "UniState Debug: Adding entry: %s, %s, %i\n",\
-         curEntry->name, curEntry->faction, curEntry->presence);
+         "UniState Debug: Adding entry: %s, %s, %d, %d\n",\
+         curEntry->name, curEntry->faction, curEntry->presence, curEntry->range);
       logprintf(stdout, debugBuffer);
 #endif
       //print data 
@@ -163,6 +175,8 @@ int unistate_writeFile(assetStatePtr list, xmlTextWriterPtr writer)
          xmlw_elem(writer, "faction", "%s", curEntry->faction);
       if(curEntry->presence != -1)
          xmlw_elem(writer, "presence", "%i", curEntry->presence);
+      if(curEntry->range != -1)
+         xmlw_elem(writer, "presence_range", "%i", curEntry->range);
       //close code block
       xmlw_endElem(writer);  
    } while((curEntry = curEntry->next) != NULL);
@@ -206,6 +220,9 @@ int unistate_load(xmlNodePtr rootNode)
             //Change presence of planet
             if(cur->presence != -1)
                p->presenceAmount = (double)cur->presence;
+            //Change range of presence
+            if(cur->range != -1)
+               p->presenceRange = (double)cur->range;
             //update the universe
             space_reconstructPresences();
             //move along
@@ -243,9 +260,10 @@ assetStatePtr unistate_getNode(char *planet)
  * @param planet name of planet
  * @param faction name of faction planet is changed to, set to NULL if default 
  * @param presence amount of presence the planet is changed to, set to -1 if default
+ * @param range range of presence the planet is changed to, set to -1 if default
  * @return 0 on success
  */
-int unistate_addNode(char *planet, char *faction, int presence)
+int unistate_addNode(char *planet, char *faction, int presence, int range)
 {
    if(!planet)
       return -1;
@@ -268,7 +286,8 @@ int unistate_addNode(char *planet, char *faction, int presence)
       node->faction = strdup(faction);
    else
       node->faction = NULL;
-   node->presence = presence;
+   node->presence = (double)presence;
+   node->range = (double)range;
    //add to global list
    node->next = unistateList;
    unistateList = node;
@@ -313,7 +332,7 @@ int unistate_setFaction(char *planet, char *faction)
    }
    //else we need to make a new node
    else
-      return unistate_addNode(planet, faction, -1);
+      return unistate_addNode(planet, faction, -1, -1);
 }
       
 /**
@@ -345,9 +364,41 @@ int unistate_setPresence(char *planet, int presence)
    }
    //else we need to make a new node
    else
-      return unistate_addNode(planet, NULL, presence);
+      return unistate_addNode(planet, NULL, presence, -1);
 }
    
+   
+/**
+ * @brief Changes the range of a planet's presence.
+ * 
+ * @param planet name of planet to be modified
+ * @param presence presence rangevalue to be changed to 
+ * @return 0 on success
+ */
+int unistate_setRange(char *planet, int range)
+{
+   
+   if(!planet) return -3;
+   assetStatePtr node = NULL;
+   Planet *p = NULL;
+   //Get planet struct. If it return errors, bail.
+   if((p = planet_get(planet)) == NULL) 
+      return -2;
+   //Change the presence of the planet
+   p->presenceRange = (double)range;
+   //update the universe
+   space_reconstructPresences();
+   //does the planet already have mods?
+   if((node = unistate_getNode(planet)) != NULL)
+   {
+      //if a faction mod hasn't been added yet
+      node->range = range;
+      return 0;
+   }
+   //else we need to make a new node
+   else
+      return unistate_addNode(planet, NULL, -1, range);
+}
    
    
    

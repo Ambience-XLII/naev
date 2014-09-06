@@ -18,6 +18,7 @@ typedef struct unistate_entry {
    char *name;
    char *faction;
    int presence;
+   int range;
    struct unistate_entry *next;
 } assetState;
 
@@ -30,6 +31,7 @@ int unistate_load(xmlNodePtr rootNode);
 void unistate_quit(void);
 int unistate_setFaction(char *planet, char *faction);
 int unistate_setPresence(char *planet, int presence);
+int unistate_setRange(char *planet, int range);
 assetStatePtr unistate_getList(void);
 
 #endif

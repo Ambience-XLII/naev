@@ -23,16 +23,19 @@
 
 static int unistateL_changeFaction(lua_State *L);
 static int unistateL_changePresence(lua_State *L);
+static int unistateL_changeRange(lua_State *L);
 static int unistateL_dump(lua_State *L);
 static const luaL_reg unistate_methods[] = {
    { "changeFaction", unistateL_changeFaction },
    { "changePresence", unistateL_changePresence },
+   { "changePresenceRange", unistateL_changeRange },
    { "dump", unistateL_dump },
    {0,0}
 };
 static const luaL_reg unistate_cond_methods[] = {
    { "changeFaction", unistateL_changeFaction },
    { "changePresence", unistateL_changePresence },
+   { "changePresenceRange", unistateL_changeRange },
    { "dump", unistateL_dump },
    {0,0}
 };
@@ -146,6 +149,45 @@ int unistateL_changePresence(lua_State *L)
 }
 
 /**
+ * @brief Changes the presence range in a system.
+ * 
+ */
+int unistateL_changeRange(lua_State *L)
+{
+   //check for bad parameter
+   if(!(lua_isstring(L,1) && lua_isnumber(L,2)))
+   {
+      NLUA_INVALID_PARAMETER(L);
+      return 1;
+   }
+   int ret;
+   char *planet = NULL;
+   int range = -1;
+   planet = (char*)lua_tostring(L, 1);
+   range = lua_tointeger(L, 2);
+   
+   if((ret = unistate_setRange(planet, range)) != 0)
+   {
+      switch(ret)
+      {
+         case -1:
+            WARN("Error: could not add node to uni_state list");
+            break;
+         case -2:
+            WARN("Error: invalid planet or faction passed");
+            break;
+         case -3:
+            WARN("Error: NULL param passed");
+            break;
+         default:
+            WARN("Error: An unknown error occurred");
+      }
+   }
+      
+   return 0;
+}
+
+/**
  * @brief Dumps all the changes from the default uni to the LUA console
  * 
  */
@@ -167,7 +209,9 @@ int unistateL_dump(lua_State *L)
 	 cli_addMessage(buffer);
 	 snprintf(buffer, sizeof(char) * (PATH_MAX - 1), "   Presence: %i", cur->presence);
 	 cli_addMessage(buffer);
-      } while((cur = cur->next) != NULL);
+      snprintf(buffer, sizeof(char) * (PATH_MAX - 1), "   Presence Range: %i", cur->range);
+      cli_addMessage(buffer);
+     } while((cur = cur->next) != NULL);
    }
    return 0;
 }
