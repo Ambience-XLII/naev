@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([naev], [0.6.0], [bobbens@gmail.com])
+AC_INIT([naev], [0.6.-1], [bobbens@gmail.com])
 AC_CONFIG_SRCDIR([src/naev.c])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -168,7 +168,7 @@ AS_IF([test "$enable_debug" != "no"], [
 AC_MSG_CHECKING([whether to use SDL2 instead of SDL])
 AC_ARG_WITH([sdl2],
   AC_HELP_STRING([--with-sdl2],
-     [use SDL2 instead of SDL (default: yes)]), [
+     [use SDL2 instead of SDL (default: no)]), [
     AS_IF([test "$withval" = "yes"], [
       with_sdl2=yes
     ], [
@@ -291,9 +291,12 @@ case "$used_lua" in
     ])
     ;;
   shared)
-    PKG_CHECK_MODULES([LUA], [lua], [have_lua=yes], [have_lua=no])
-    AS_IF([test "$have_lua" = "no"], [PKG_CHECK_MODULES([LUA], [lua5.1], [have_lua=yes], [have_lua=no])])
-    AS_IF([test "$have_lua" = "no"], [PKG_CHECK_MODULES([LUA], [lua51], [have_lua=yes], [have_lua=no])])
+    have_lua=no
+    m4_foreach([pkgname], [lua-5.1, lua5.1, lua51, lua], [
+        AS_IF([test "$have_lua" = "no"], [
+            PKG_CHECK_MODULES([LUA], [pkgname], [have_lua=yes], [have_lua=no])
+        ])
+    ])
     AS_IF([test "$have_lua" = "no"], [AC_WARN([Lua is set to shared but can not find library; using internal Lua])])
     ;;
   *)
@@ -339,13 +342,14 @@ AS_IF([test "$with_openal" = "yes"], [
 ])
 
 # SDL_mixer
+AS_IF([test "$have_sdl2" = "yes"], [SDLMIXER_NAME=SDL2_mixer], [SDLMIXER_NAME=SDL_mixer])
 AS_IF([test "$with_sdlmixer" = "yes"], [
-  PKG_CHECK_MODULES([SDLMIXER], [SDL_mixer], [have_sdlmixer=yes], [have_sdlmixer=no])
+  PKG_CHECK_MODULES([SDLMIXER], [$SDLMIXER_NAME], [have_sdlmixer=yes], [have_sdlmixer=no])
 ])
 
 # SDL_image
 VAR_SAVE([LIBS])
-AS_IF([test "$have_sdl2" = "yes"], [SDLIMAGE_NAME=SDL2_image], [SDLMIXER_NAME=SDL_image])
+AS_IF([test "$have_sdl2" = "yes"], [SDLIMAGE_NAME=SDL2_image], [SDLIMAGE_NAME=SDL_image])
 AC_SEARCH_LIBS([IMG_Load], [$SDLIMAGE_NAME], [
   SDLIMAGE_CFLAGS=
   SDLIMAGE_LIBS="$LIBS"

@@ -90,11 +90,6 @@ static int gui_getMessage     = 1; /**< Whether or not the player should receive
 extern Pilot** pilot_stack; /**< @todo remove */
 extern int pilot_nstack; /**< @todo remove */
 
-/*
- * map stuff for autonav
- */
-extern int map_npath; /**< @todo remove. */
-
 
 /**
  * GUI Lua stuff.
@@ -426,10 +421,10 @@ static void gui_renderPlanetTarget( double dt )
       planet = cur_system->planets[player.p->nav_planet];
       c = planet_getColour( planet );
 
-      x = planet->pos.x - planet->radius * 1.2;
-      y = planet->pos.y + planet->radius * 1.2;
-      w = planet->radius * 2. * 1.2;
-      h = planet->radius * 2. * 1.2;
+      x = planet->pos.x - planet->gfx_space->w / 2.;
+      y = planet->pos.y + planet->gfx_space->h / 2.;
+      w = planet->gfx_space->w;
+      h = planet->gfx_space->h;
       gui_renderTargetReticles( x, y, w, h, c );
    }
 }
@@ -1275,6 +1270,14 @@ void gui_renderPilot( const Pilot* p, RadarShape shape, double w, double h, doub
       return;
    }
 
+   /* Transform coordinates into the 0,0 -> SCREEN_W, SCREEN_H range. */
+   if (overlay) {
+      x += SCREEN_W / 2;
+      y += SCREEN_H / 2;
+      w *= 2.;
+      h *= 2.;
+   }
+
    if (shape==RADAR_RECT)
       rc = 0;
    else if (shape==RADAR_CIRCLE)
@@ -1364,8 +1367,8 @@ void gui_renderPlayer( double res, int overlay )
    double x, y, r;
 
    if (overlay) {
-      x = player.p->solid->pos.x / res;
-      y = player.p->solid->pos.y / res;
+      x = player.p->solid->pos.x / res + SCREEN_W / 2;
+      y = player.p->solid->pos.y / res + SCREEN_H / 2;
       r = 5.;
    }
    else {
@@ -1595,6 +1598,14 @@ void gui_renderPlanet( int ind, RadarShape shape, double w, double h, double res
       }
    }
 
+   if (overlay) {
+      /* Transform coordinates. */
+      cx += SCREEN_W / 2;
+      cy += SCREEN_H / 2;
+      w  *= 2.;
+      h  *= 2.;
+   }
+
    /* Do the blink. */
    if (ind == player.p->nav_planet)
       gui_planetBlink( w, h, rc, cx, cy, vr, shape );
@@ -1699,6 +1710,14 @@ void gui_renderJumpPoint( int ind, RadarShape shape, double w, double h, double 
       }
    }
 
+   if (overlay) {
+      /* Transform coordinates. */
+      cx += SCREEN_W / 2;
+      cy += SCREEN_H / 2;
+      w  *= 2.;
+      h  *= 2.;
+   }
+
    /* Do the blink. */
    if (ind == player.p->nav_hyperspace) {
       gui_planetBlink( w, h, rc, cx, cy, vr, shape );
@@ -1708,6 +1727,7 @@ void gui_renderJumpPoint( int ind, RadarShape shape, double w, double h, double 
       col = &cRed;
    else
       col = &cWhite;
+
    if (overlay)
       a = 1.;
    else
